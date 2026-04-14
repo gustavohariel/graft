@@ -8,7 +8,7 @@
 # Pure bash + git. No jq, python, or other runtimes required.
 #
 # This file lives in your repo and is yours to edit. To regenerate it:
-#   bash <(curl -fsSL https://gustavohariel.github.io/graft/bin/install) --force
+#   curl -fsSL https://gustavohariel.github.io/graft/bin/install | bash -s -- --force
 
 set -euo pipefail
 

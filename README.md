@@ -9,10 +9,16 @@ Claude Code's `--worktree` flag creates worktrees inside `<repo>/.claude/worktre
 ## Install
 
 ```bash
-bash <(curl -fsSL https://gustavohariel.github.io/graft/bin/install)
+curl -fsSL https://gustavohariel.github.io/graft/bin/install | bash
 ```
 
 No npm, no bun, no node, no python. One bash script, ~30 seconds. The runtime hook has **zero dependencies**; the installer only needs `jq` or `python3` if your `.claude/settings.json` already has prior content to merge.
+
+To regenerate an existing install (overwrite `graft-hook.sh` + `graft-scaffold.sh`):
+
+```bash
+curl -fsSL https://gustavohariel.github.io/graft/bin/install | bash -s -- --force
+```
 
 ### Platform support
 

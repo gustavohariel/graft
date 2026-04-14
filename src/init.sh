@@ -15,16 +15,6 @@ INSTALLER_URL="${GRAFT_INSTALLER_URL:-https://gustavohariel.github.io/graft/bin/
 __GRAFT_DETECTORS__
 # ─── end detectors ───────────────────────────────────────────────────────────
 
-if [[ ! -t 0 ]] && [[ -z "${GRAFT_REEXEC:-}" ]]; then
-  if command -v curl >/dev/null 2>&1; then
-    export GRAFT_REEXEC=1
-    exec </dev/tty bash <(curl -fsSL "${INSTALLER_URL}") "$@"
-  else
-    echo "graft: please run as: bash <(curl -fsSL ${INSTALLER_URL})" >&2
-    exit 1
-  fi
-fi
-
 if [[ -t 1 ]]; then
   C_BOLD=$'\e[1m'; C_DIM=$'\e[2m'; C_RED=$'\e[31m'; C_GREEN=$'\e[32m'
   C_YELLOW=$'\e[33m'; C_BLUE=$'\e[34m'; C_RESET=$'\e[0m'
@@ -37,6 +27,8 @@ warn() { printf '%s%s%s\n' "${C_YELLOW}" "$*" "${C_RESET}" >&2; }
 die()  { printf '%s%s%s\n' "${C_RED}" "$*" "${C_RESET}" >&2; exit 1; }
 ok()   { printf '  %s✓%s %s\n' "${C_GREEN}" "${C_RESET}" "$*"; }
 
+# Parse args first so non-interactive flags (--help, --version) exit before
+# we even think about reaching for /dev/tty.
 FORCE=0
 for arg in "$@"; do
   case "${arg}" in
@@ -47,7 +39,8 @@ for arg in "$@"; do
 graft — external worktrees for Claude Code
 
 Usage:
-  bash <(curl -fsSL https://gustavohariel.github.io/graft/bin/install) [--force]
+  curl -fsSL https://gustavohariel.github.io/graft/bin/install | bash
+  curl -fsSL https://gustavohariel.github.io/graft/bin/install | bash -s -- --force
 
 Options:
   --force, -f    Overwrite existing graft-hook.sh and graft-scaffold.sh
@@ -58,6 +51,22 @@ EOF
     *) die "unknown argument: ${arg}" ;;
   esac
 done
+
+# When we were piped to (curl | bash), our stdin is the script itself, so
+# any `read` would consume the script instead of prompting the user. Re-exec
+# via process substitution so the script lives on a file descriptor and
+# stdin is free for interactive input. Skip this dance if we already re-exec'd
+# once (tracked via GRAFT_REEXEC) to avoid a loop.
+if [[ ! -t 0 ]] && [[ -z "${GRAFT_REEXEC:-}" ]]; then
+  if ! { : </dev/tty; } 2>/dev/null; then
+    die "graft: no controlling terminal — installation needs an interactive tty. Run from a real terminal."
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    die "graft: curl not found — please install curl first, or download bin/install manually."
+  fi
+  export GRAFT_REEXEC=1
+  exec </dev/tty bash <(curl -fsSL "${INSTALLER_URL}") "$@"
+fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -z "${REPO_ROOT}" ]] && die "graft must be run inside a git repository"
