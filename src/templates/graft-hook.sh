@@ -24,8 +24,14 @@ GRAFT_WORKTREE_ROOT=""
 GRAFT_SYMLINK_DIRS=()
 GRAFT_COPY_FILES=()
 GRAFT_SCAFFOLD=""
+# GRAFT_COPY_DIRS: env var wins over config default, so capture env first.
+_ENV_COPY_DIRS="${GRAFT_COPY_DIRS:-}"
+GRAFT_COPY_DIRS=""
 # shellcheck disable=SC1090
 source "${CONFIG}"
+if [[ -n "${_ENV_COPY_DIRS}" ]]; then
+  GRAFT_COPY_DIRS="${_ENV_COPY_DIRS}"
+fi
 
 if [[ -z "${GRAFT_WORKTREE_ROOT}" ]]; then
   echo "graft: GRAFT_WORKTREE_ROOT is not set in ${CONFIG}" >&2
@@ -108,10 +114,10 @@ for file in ${GRAFT_COPY_FILES[@]+"${GRAFT_COPY_FILES[@]}"}; do
   fi
 done
 
-# Per-invocation override: dirs listed in GRAFT_COPY_DIRS get a full copy
-# instead of a symlink for this worktree only. Useful when you want to run
-# destructive updates (gradle clean, pod install, etc.) against a single
-# worktree without affecting the others that share the symlink.
+# Dirs listed in GRAFT_COPY_DIRS get a full copy instead of a symlink.
+# Set as a repo-wide default in graft.config (e.g. GRAFT_COPY_DIRS="android")
+# when symlinks don't work for your toolchain (React Native/Metro), or as a
+# per-invocation env var to override for one worktree:
 #   e.g. GRAFT_COPY_DIRS=android claude --worktree test-upgrade
 OVERRIDE_COPY=()
 if [[ -n "${GRAFT_COPY_DIRS:-}" ]]; then

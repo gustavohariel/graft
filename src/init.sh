@@ -212,6 +212,11 @@ GRAFT_WORKTREE_ROOT="${WORKTREE_ROOT_ESC}"
 GRAFT_SYMLINK_DIRS=(${SYMLINKS_ARR})
 GRAFT_COPY_FILES=(${COPY_ARR})
 GRAFT_SCAFFOLD=".claude/graft-scaffold.sh"
+
+# Dirs to always copy instead of symlink (comma-separated). Useful when your
+# toolchain can't follow symlinks (e.g. React Native / Metro). Env var of the
+# same name overrides this per invocation.
+GRAFT_COPY_DIRS=""
 EOF
 ok "wrote .claude/graft.config"
 
