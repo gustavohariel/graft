@@ -441,7 +441,11 @@ for dir in ${GRAFT_SYMLINK_DIRS[@]+"${GRAFT_SYMLINK_DIRS[@]}"}; do
     rm -rf "${dst}"
     mkdir -p "$(dirname "${dst}")"
     if is_copy_override "${dir}"; then
-      cp -R "${src}" "${dst}"
+      if [[ "$(uname)" == "Darwin" ]]; then
+        cp -cR "${src}" "${dst}"
+      else
+        cp -R "${src}" "${dst}"
+      fi
     else
       ln -s "${src}" "${dst}"
     fi
